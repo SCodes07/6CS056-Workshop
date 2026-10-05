@@ -3,9 +3,16 @@
 <head>
     <title>Student Details</title>
 </head>
+
 <body>
 
     <h1>Student Details</h1>
+
+    @if(session('success'))
+        <p>
+            {{ session('success') }}
+        </p>
+    @endif
 
     <p>
         <strong>ID:</strong>
@@ -39,13 +46,29 @@
 
     <br>
 
-    <a href="/students/{{ $student->id }}/edit">
+    <a href="{{ route('students.edit', $student->id) }}">
         Edit Student
     </a>
 
     <br><br>
 
-    <a href="/students">
+    <form
+        action="{{ route('students.destroy', $student->id) }}"
+        method="POST"
+    >
+
+        @csrf
+        @method('DELETE')
+
+        <button type="submit">
+            Delete Student
+        </button>
+
+    </form>
+
+    <br>
+
+    <a href="{{ route('students.index') }}">
         Back to Students
     </a>
 
