@@ -6,6 +6,8 @@
 
 <body>
 
+    <x-navbar />
+
     <h1>Students</h1>
 
 

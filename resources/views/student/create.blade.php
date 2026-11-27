@@ -4,6 +4,9 @@
     <title>Create Student</title>
 </head>
 <body>
+
+    <x-navbar />
+
     <h1>Add New Student</h1>
 
     {{-- Display validation errors --}}

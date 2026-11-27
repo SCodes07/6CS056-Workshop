@@ -5,6 +5,8 @@
 </head>
 <body>
 
+<x-navbar />
+
 <h1>Create Course</h1>
 
 @if($errors->any())

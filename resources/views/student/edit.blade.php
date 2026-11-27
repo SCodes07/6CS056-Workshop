@@ -6,6 +6,8 @@
 
 <body>
 
+    <x-navbar />
+
     <h1>Edit Student</h1>
 
     @if($errors->any())

@@ -6,6 +6,8 @@
 
 <body>
 
+    <x-navbar />
+
     <h1>Student Details</h1>
 
     @if(session('success'))

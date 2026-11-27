@@ -5,6 +5,8 @@
 </head>
 <body>
 
+<x-navbar />
+
 <h1>Course Details</h1>
 
 @if(session('success'))

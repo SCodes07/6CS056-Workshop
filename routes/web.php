@@ -1,280 +1,302 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use App\Models\Student;
+use App\Http\Controllers\AuthController;
 use App\Models\Course;
-
-
-// ======================================================
-// STUDENT CREATE FORM
-// ======================================================
-
-Route::get('/student/create', function () {
-    return view('student.create');
-})->name('students.create');
-
+use App\Models\Student;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
 
 // ======================================================
-// STUDENT LIST
+// GUEST ROUTES
 // ======================================================
 
-Route::get('/students', function () {
+Route::middleware('guest')->group(function () {
 
-    $students = Student::all();
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 
-    return view('student.list', [
-        'students' => $students
-    ]);
+    Route::post('/login', [AuthController::class, 'login']);
 
-})->name('students.index');
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 
-
-// ======================================================
-// STUDENT EDIT FORM
-// IMPORTANT: Keep this BEFORE /students/{id}
-// ======================================================
-
-Route::get('/students/{id}/edit', function ($id) {
-
-    $student = Student::findOrFail($id);
-
-    return view('student.edit', [
-        'student' => $student
-    ]);
-
-})->name('students.edit');
-
+    Route::post('/register', [AuthController::class, 'register']);
+});
 
 // ======================================================
-// STUDENT DETAILS
+// AUTHENTICATED ROUTES
 // ======================================================
 
-Route::get('/students/{id}', function ($id) {
+Route::middleware('auth')->group(function () {
 
-    $student = Student::findOrFail($id);
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    return view('student.detail', [
-        'student' => $student
-    ]);
+    // ======================================================
+    // STUDENT CREATE FORM
+    // ======================================================
 
-})->name('students.show');
+    Route::get('/student/create', function () {
+        return view('student.create');
+    })->name('students.create');
 
+    // ======================================================
+    // STUDENT LIST
+    // ======================================================
 
-// ======================================================
-// STORE NEW STUDENT
-// ======================================================
+    Route::get('/students', function () {
 
-Route::post('/student', function (Request $request) {
+        $students = Student::all();
 
-    $validated = $request->validate([
+        return view('student.list', [
+            'students' => $students,
+        ]);
 
-        'name' => 'required|string|max:255',
+    })->name('students.index');
 
-        'email' => 'required|email|max:255|unique:students,email',
+    // ======================================================
+    // STUDENT EDIT FORM
+    // IMPORTANT: Keep this BEFORE /students/{id}
+    // ======================================================
 
-        'phone' => 'required|string|max:20',
+    Route::get('/students/{id}/edit', function ($id) {
 
-        'address' => 'nullable|string|max:500',
+        $student = Student::findOrFail($id);
 
-        'date_of_birth' => 'nullable|date',
+        return view('student.edit', [
+            'student' => $student,
+        ]);
 
-    ]);
+    })->name('students.edit');
 
-    Student::create($validated);
+    // ======================================================
+    // STUDENT DETAILS
+    // ======================================================
 
-    return redirect()
-        ->route('students.index')
-        ->with('success', 'Student created successfully!');
+    Route::get('/students/{id}', function ($id) {
 
-})->name('students.store');
+        $student = Student::findOrFail($id);
 
+        return view('student.detail', [
+            'student' => $student,
+        ]);
 
-// ======================================================
-// UPDATE STUDENT
-// ======================================================
+    })->name('students.show');
 
-Route::put('/students/{id}', function (Request $request, $id) {
+    // ======================================================
+    // STORE NEW STUDENT
+    // ======================================================
 
-    $student = Student::findOrFail($id);
+    Route::post('/student', function (Request $request) {
 
-    $validated = $request->validate([
+        $validated = $request->validate([
 
-        'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
 
-        'email' => [
-            'required',
-            'email',
-            'max:255',
-            Rule::unique('students', 'email')->ignore($student->id),
-        ],
+            'email' => 'required|email|max:255|unique:students,email',
 
-        'phone' => 'required|string|max:20',
+            'phone' => 'required|string|max:20',
 
-        'address' => 'nullable|string|max:500',
+            'address' => 'nullable|string|max:500',
 
-        'date_of_birth' => 'nullable|date',
+            'date_of_birth' => 'nullable|date',
 
-    ]);
+        ]);
 
-    $student->update($validated);
+        Student::create($validated);
 
-    return redirect()
-        ->route('students.show', $student->id)
-        ->with('success', 'Student updated successfully!');
+        return redirect()
+            ->route('students.index')
+            ->with('success', 'Student created successfully!');
 
-})->name('students.update');
+    })->name('students.store');
 
+    // ======================================================
+    // UPDATE STUDENT
+    // ======================================================
 
-// ======================================================
-// DELETE STUDENT
-// ======================================================
+    Route::put('/students/{id}', function (Request $request, $id) {
 
-Route::delete('/students/{id}', function ($id) {
+        $student = Student::findOrFail($id);
 
-    $student = Student::findOrFail($id);
+        $validated = $request->validate([
 
-    $student->delete();
+            'name' => 'required|string|max:255',
 
-    return redirect()
-        ->route('students.index')
-        ->with('success', 'Student deleted successfully!');
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('students', 'email')->ignore($student->id),
+            ],
 
-})->name('students.destroy');
+            'phone' => 'required|string|max:20',
 
+            'address' => 'nullable|string|max:500',
 
-// ======================================================
-// COURSE CREATE FORM
-// ======================================================
+            'date_of_birth' => 'nullable|date',
 
-Route::get('/courses/create', function () {
-    return view('course.create');
-})->name('courses.create');
+        ]);
 
+        $student->update($validated);
 
-// ======================================================
-// COURSE LIST
-// ======================================================
+        return redirect()
+            ->route('students.show', $student->id)
+            ->with('success', 'Student updated successfully!');
 
-Route::get('/courses', function () {
+    })->name('students.update');
 
-    $courses = Course::all();
+    // ======================================================
+    // DELETE STUDENT
+    // ======================================================
 
-    return view('course.list', [
-        'courses' => $courses
-    ]);
+    Route::delete('/students/{id}', function ($id) {
 
-})->name('courses.index');
+        $student = Student::findOrFail($id);
 
+        $student->delete();
 
-// ======================================================
-// COURSE EDIT FORM
-// IMPORTANT: Keep this BEFORE /courses/{id}
-// ======================================================
+        return redirect()
+            ->route('students.index')
+            ->with('success', 'Student deleted successfully!');
 
-Route::get('/courses/{id}/edit', function ($id) {
+    })->name('students.destroy');
 
-    $course = Course::findOrFail($id);
+    // ======================================================
+    // COURSE CREATE FORM
+    // ======================================================
 
-    return view('course.edit', [
-        'course' => $course
-    ]);
+    Route::get('/courses/create', function () {
+        return view('course.create');
+    })->name('courses.create');
 
-})->name('courses.edit');
+    // ======================================================
+    // COURSE LIST
+    // ======================================================
 
+    Route::get('/courses', function (Request $request) {
 
-// ======================================================
-// COURSE DETAILS
-// ======================================================
+        $courses = $request->user()->role === 'admin'
+            ? Course::latest()->get()
+            : $request->user()->courses()->latest()->get();
 
-Route::get('/courses/{id}', function ($id) {
+        return view('course.list', [
+            'courses' => $courses,
+        ]);
 
-    $course = Course::findOrFail($id);
+    })->name('courses.index');
 
-    return view('course.detail', [
-        'course' => $course
-    ]);
+    // ======================================================
+    // COURSE EDIT FORM
+    // IMPORTANT: Keep this BEFORE /courses/{id}
+    // ======================================================
 
-})->name('courses.show');
+    Route::get('/courses/{id}/edit', function ($id) {
 
+        $course = Course::findOrFail($id);
 
-// ======================================================
-// STORE NEW COURSE
-// ======================================================
+        Gate::authorize('manage-course', $course);
 
-Route::post('/courses', function (Request $request) {
+        return view('course.edit', [
+            'course' => $course,
+        ]);
 
-    $validated = $request->validate([
+    })->name('courses.edit');
 
-        'name' => 'required|string|max:255',
+    // ======================================================
+    // COURSE DETAILS
+    // ======================================================
 
-        'description' => 'nullable|string|max:1000',
+    Route::get('/courses/{id}', function ($id) {
 
-        'duration' => 'required|integer|min:1',
+        $course = Course::findOrFail($id);
 
-        'fee' => 'required|numeric|min:0',
+        Gate::authorize('manage-course', $course);
 
-        'difficulty' => 'required|in:Easy,Medium,Hard',
+        return view('course.detail', [
+            'course' => $course,
+        ]);
 
-    ]);
+    })->name('courses.show');
 
-    $validated['is_active'] = $request->has('is_active');
+    // ======================================================
+    // STORE NEW COURSE
+    // ======================================================
 
-    Course::create($validated);
+    Route::post('/courses', function (Request $request) {
 
-    return redirect()
-        ->route('courses.index')
-        ->with('success', 'Course created successfully!');
+        $validated = $request->validate([
 
-})->name('courses.store');
+            'name' => 'required|string|max:255',
 
+            'description' => 'nullable|string|max:1000',
 
-// ======================================================
-// UPDATE COURSE
-// ======================================================
+            'duration' => 'required|integer|min:1',
 
-Route::put('/courses/{id}', function (Request $request, $id) {
+            'fee' => 'required|numeric|min:0',
 
-    $course = Course::findOrFail($id);
+            'difficulty' => 'required|in:Easy,Medium,Hard',
 
-    $validated = $request->validate([
+        ]);
 
-        'name' => 'required|string|max:255',
+        $validated['is_active'] = $request->has('is_active');
 
-        'description' => 'nullable|string|max:1000',
+        $request->user()->courses()->create($validated);
 
-        'duration' => 'required|integer|min:1',
+        return redirect()
+            ->route('courses.index')
+            ->with('success', 'Course created successfully!');
 
-        'fee' => 'required|numeric|min:0',
+    })->name('courses.store');
 
-        'difficulty' => 'required|in:Easy,Medium,Hard',
+    // ======================================================
+    // UPDATE COURSE
+    // ======================================================
 
-    ]);
+    Route::put('/courses/{id}', function (Request $request, $id) {
 
-    $validated['is_active'] = $request->has('is_active');
+        $course = Course::findOrFail($id);
 
-    $course->update($validated);
+        Gate::authorize('manage-course', $course);
 
-    return redirect()
-        ->route('courses.show', $course->id)
-        ->with('success', 'Course updated successfully!');
+        $validated = $request->validate([
 
-})->name('courses.update');
+            'name' => 'required|string|max:255',
 
+            'description' => 'nullable|string|max:1000',
 
-// ======================================================
-// DELETE COURSE
-// ======================================================
+            'duration' => 'required|integer|min:1',
 
-Route::delete('/courses/{id}', function ($id) {
+            'fee' => 'required|numeric|min:0',
 
-    $course = Course::findOrFail($id);
+            'difficulty' => 'required|in:Easy,Medium,Hard',
 
-    $course->delete();
+        ]);
 
-    return redirect()
-        ->route('courses.index')
-        ->with('success', 'Course deleted successfully!');
+        $validated['is_active'] = $request->has('is_active');
 
-})->name('courses.destroy');
+        $course->update($validated);
+
+        return redirect()
+            ->route('courses.show', $course->id)
+            ->with('success', 'Course updated successfully!');
+
+    })->name('courses.update');
+
+    // ======================================================
+    // DELETE COURSE
+    // ======================================================
+
+    Route::delete('/courses/{id}', function ($id) {
+
+        $course = Course::findOrFail($id);
+
+        Gate::authorize('manage-course', $course);
+
+        $course->delete();
+
+        return redirect()
+            ->route('courses.index')
+            ->with('success', 'Course deleted successfully!');
+
+    })->name('courses.destroy');
+});
